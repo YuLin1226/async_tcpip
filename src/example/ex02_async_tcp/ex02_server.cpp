@@ -49,6 +49,7 @@ public:
                                      boost::bind(&this_type::writeHandler,
                                                  this,
                                                  boost::asio::placeholders::error));
+        accept();
     }
 
     void writeHandler(const boost::system::error_code& ec)

@@ -48,16 +48,26 @@ public:
     {
         if(ec) return;
         std::cout << ">>> Receive from " << socket_ptr->remote_endpoint().address() << std::endl;
+        // socket_ptr->async_read_some(boost::asio::buffer(buffer_),
+        //                             boost::bind(&this_type::readHandler, 
+        //                                         this, 
+        //                                         boost::asio::placeholders::error));
         socket_ptr->async_read_some(boost::asio::buffer(buffer_),
                                     boost::bind(&this_type::readHandler, 
                                                 this, 
-                                                boost::asio::placeholders::error));
+                                                boost::asio::placeholders::error,
+                                                socket_ptr));
     }
 
-    void readHandler(const boost::system::error_code& ec)
+    void readHandler(const boost::system::error_code& ec, std::shared_ptr<socket_type> socket_ptr)
     {
         if(ec) return;
         std::cout << &buffer_[0] << std::endl;
+        socket_ptr->async_read_some(boost::asio::buffer(buffer_),
+                                    boost::bind(&this_type::readHandler, 
+                                                this, 
+                                                boost::asio::placeholders::error,
+                                                socket_ptr));
     }
 
 };

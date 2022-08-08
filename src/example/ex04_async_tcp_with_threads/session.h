@@ -10,8 +10,14 @@ public:
     {
     }
 
+    ~session()
+    {
+        std::cout << "Session destroyed" << std::endl;
+    }
+
     void start()
     {
+        writeMsg();
         boost::asio::async_read_until(socket, 
                                       streambuf, 
                                       '\n', 
@@ -20,6 +26,19 @@ public:
             std::cout << std::istream(&self->streambuf).rdbuf();
         });
     }
+
+    void writeMsg()
+    {
+        boost::asio::async_write(
+            socket,
+            boost::asio::buffer("Hello asio client, this is asio server\n"),
+            [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
+            {
+                std::cout << ">>> send message completed" << std::endl;
+            });
+    }
+
+    
 
 private:
 

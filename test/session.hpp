@@ -1,79 +1,45 @@
 #include <iostream>
 #include <boost/asio.hpp>
+#include <string.h>
+#include <boost/thread/mutex.hpp>
+
+
+
 
 class session : public std::enable_shared_from_this<session>
 {
 public:
 
-    session(boost::asio::ip::tcp::socket&& socket)
-    : socket(std::move(socket))
-    {
-    }
+    session(boost::asio::ip::tcp::socket&& socket, boost::asio::io_context& io_context);
 
-    ~session()
-    {
-        std::cout << "Session destroyed" << std::endl;
-    }
+    ~session();
 
-    void start()
-    {
-        // readMsg(18);
-        writeMsg();
-        boost::asio::async_read_until(socket, 
-                                      streambuf, 
-                                      "e$", 
-                                      [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
-        {
-            std::cout << std::istream(&self->streambuf).rdbuf();
-        });
-    }
+    void writeRobotArmMoveCommand(const int move_id);
 
-    void writeMsg()
-    {
-        boost::asio::async_write(
-            socket,
-            boost::asio::buffer("$2,align,0,0,move$\r\n"),
-            [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
-            {
-                std::cout << ">>> send message completed" << std::endl;
-            });
-    }
+    // void start()
+    // {
+    //     writeMsg();
+    //     boost::asio::async_read_until(socket, 
+    //                                   streambuf_, 
+    //                                   "e$", 
+    //                                   [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
+    //     {
+    //         std::cout << std::istream(&self->streambuf_).rdbuf();
+    //     });
+    // }
 
-    void writeMsg1()
-    {
-        for(auto i = 0 ; i < received_data.size() ; i++)
-            std::cout << received_data[i] << " ";
-        boost::asio::async_write(
-            socket,
-            boost::asio::buffer(received_data, 10),
-            [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
-            {
-                std::cout << ">>> send message completed" << std::endl;
-            });
-    }
+    void initialization();
 
-    void readMsg(uint8_t data_size)
-    {
-        auto self(shared_from_this());
-        boost::asio::async_read(
-            socket,
-            boost::asio::buffer(received_data, data_size),
-            [this, self](boost::system::error_code ec, std::size_t length)
-            {
-                if (!ec)
-                {
-                    // send back to client
-                    // writeMsg1();
-                }
-            }
-        );
-        
-    }
+    std::vector<char> readRobotArmResponse(const int move_id);
     
 
 private:
 
-    boost::asio::ip::tcp::socket socket;
-    boost::asio::streambuf streambuf;
-    std::vector<char> received_data = std::vector<char>(10);
+    boost::asio::io_context& io_context_;
+    boost::asio::ip::tcp::socket socket_;
+    boost::asio::streambuf streambuf_;
+    std::shared_ptr<boost::asio::deadline_timer> timeout_;
+    std::shared_ptr<boost::mutex> mutex_;
+    
 };
+

@@ -31,6 +31,7 @@ public:
     void initialization();
 
     std::vector<char> readRobotArmResponse(const int move_id);
+    void readRobotArmResponse(const int move_id, std::vector<char>& char_vector, bool& read_success);
     
 
 private:

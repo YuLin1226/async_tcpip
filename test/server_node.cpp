@@ -14,7 +14,13 @@ void gManualSendRobotCommand(Server& srv)
                 std::string id;
                 std::getline(std::cin, id);
                 srv.getSession()->writeRobotArmMoveCommand(std::stoi(id));
-                srv.getSession()->readRobotArmResponse(std::stoi(id));
+
+                std::vector<char> data;
+                bool read_success;
+
+                // srv.getSession()->readRobotArmResponse(std::stoi(id));
+                srv.getSession()->readRobotArmResponse(std::stoi(id), data, read_success);
+                std::cout << read_success;
                 std::cout << "\n";
             }
             

@@ -325,3 +325,166 @@
 
     }
 
+    void session::readRobotArmResponse(const int move_id, std::vector<char>& char_vector, bool& read_success)
+    {
+        
+        int data_size;
+        switch (move_id)
+        {
+            // active robot arm program.
+            case 1: 
+                data_size = 20;
+                break;
+            // robot arm run "alignment"
+            case 2: 
+                data_size = 19;
+                break;
+            // robot arm run "no1 drill above"
+            case 11:
+                data_size = 25;
+                break;
+            // robot arm run "no1 drill workplace"
+            case 12:
+                data_size = 29;
+                break;
+            // robot arm run "no1 drill safe"
+            case 13:
+                data_size = 24;
+                break;
+            // robot arm run "no2 drill above"
+            case 21:
+                data_size = 25;
+                break;
+            // robot arm run "no2 drill workplace"
+            case 22:
+                data_size = 29;
+                break;
+            // robot arm run "no2 drill safe"
+            case 23:
+                data_size = 24;
+                break;
+            // robot arm run "no3 drill above"
+            case 31:
+                data_size = 25;
+                break;
+            // robot arm run "no3 drill workplace"
+            case 32:
+                data_size = 29;
+                break;
+            // robot arm run "no3 drill safe"
+            case 33:
+                data_size = 24;
+                break;
+            // robot arm run "no4 drill above"
+            case 41:
+                data_size = 25;
+                break;
+            // robot arm run "no4 drill workplace"
+            case 42:
+                data_size = 29;
+                break;
+            // robot arm run "no4 drill safe"
+            case 43:
+                data_size = 24;
+                break;
+            // robot arm run "no5 drill above"
+            case 51:
+                data_size = 25;
+                break;
+            // robot arm run "no5 drill workplace"
+            case 52:
+                data_size = 29;
+                break;
+            // robot arm run "no5 drill safe"
+            case 53:
+                data_size = 24;
+                break;
+            // robot arm run "no6 drill above"
+            case 61:
+                data_size = 25;
+                break;
+            // robot arm run "no6 drill workplace"
+            case 62:
+                data_size = 29;
+                break;
+            // robot arm run "no6 drill safe"
+            case 63:
+                data_size = 24;
+                break;
+            // robot arm run "go home"
+            case 99:
+                data_size = 19;
+                break;
+            // robot arm run "pcb above (get target)"
+            case 100:
+                data_size = 24;
+                break;
+            // robot arm run "pcb x position (get target)"
+            case 101:
+                data_size = 28;
+                break;
+            // robot arm run "pcb safe (get target)"
+            case 102:
+                data_size = 23;
+                break;
+            // robot arm run "pcb above (place target)"
+            case 103:
+                data_size = 24;
+                break;
+            // robot arm run "pcb x position (place target)"
+            case 104:
+                data_size = 28;
+                break;
+            // robot arm run "pcb safe (place target)"
+            case 105:
+                data_size = 23;
+                break;
+
+            default:
+                data_size = 0;
+                break;
+        }
+
+        auto self(shared_from_this());
+        read_success = false;
+        char_vector = std::vector<char>(data_size);
+
+        try
+        {
+            boost::mutex::scoped_lock scoped_locker(*mutex_);
+            boost::asio::async_read( 
+                socket_, 
+                boost::asio::buffer(char_vector, data_size),
+                [&](const boost::system::error_code &error, std::size_t bytes_transferred)
+                {
+                    if (error)
+                    {
+                        read_success = false;
+                        std::cerr << ">>> readCallback Error " << error << std::endl;
+                    }
+                    timeout_->cancel();
+                    read_success = true;
+                });
+            
+            timeout_->expires_from_now(boost::posix_time::seconds(5));
+            timeout_->async_wait(  
+                [&](const boost::system::error_code &error)
+                {
+                    if (!error)
+                    {
+                        read_success = false;
+                        socket_.cancel();
+                        std::cerr << ">>> Read timeout." << std::endl;
+                    }
+                });
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << ">>> Read exception. " << e.what() << '\n';
+        }
+        
+        
+
+    }
+
+

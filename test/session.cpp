@@ -6,17 +6,18 @@
     : socket_(std::move(socket))
     , io_context_(io_context)
     {
-        std::cout << "*** Create session. ***\n" << std::endl;
+        std::cout << "*** Create session. ***" << std::endl;
         initialization();
     }
     
     session::~session()
     {
-        std::cout << "*** Session eliminated. ***\n" << std::endl;
+        std::cout << "*** Session eliminated. ***" << std::endl;
     }
 
     void session::initialization()
     {
+        std::cout << "*** Session initialized. ***" << std::endl;
         timeout_ = std::shared_ptr<boost::asio::deadline_timer>{new boost::asio::deadline_timer(io_context_)};
         mutex_   = std::shared_ptr<boost::mutex>{new boost::mutex};
     }
@@ -282,6 +283,7 @@
 
         try
         {
+            
             boost::mutex::scoped_lock scoped_locker(*mutex_);
             boost::asio::async_read( 
                 socket_, 
@@ -293,34 +295,44 @@
                         data_available = false;
                         std::cerr << ">>> readCallback Error " << error << std::endl;
                     }
+                    std::cout << ">>> Reading finisher and cancel timer.\n";
                     timeout_->cancel();
                     data_available = true;
                 });
             
-            timeout_->expires_from_now(boost::posix_time::seconds(10));
-            timeout_->async_wait(  
-                [&](const boost::system::error_code &error)
-                {
-                    if (!error)
-                    {
-                        data_available = false;
-                        socket_.cancel();
-                        std::cerr << ">>> Read timeout." << std::endl;
-                    }
-                });
+            timeout_->expires_from_now(boost::posix_time::seconds(20));
+            // timeout_->async_wait(  
+            //     [&](const boost::system::error_code &error)
+            //     {
+            //         if (!error)
+            //         {
+            //             data_available = false;
+            //             socket_.cancel();
+            //             std::cerr << ">>> Read timeout." << std::endl;
+            //         }
+            //     });
+            timeout_->wait();
+            if(!data_available)
+            {
+                socket_.cancel();
+                std::cerr << ">>> Read timeout." << std::endl;
+            }
         }
         catch(const std::exception& e)
         {
             std::cerr << ">>> Read exception. " << e.what() << '\n';
         }
         
+
+        // Although a timer is set, but this if condition is not related to io object, so it won't be blocked.
+        // Hence the function quickly jumps to this if condition, and throw.
         if (data_available)
         {
             return char_vector;
         }
         else
         {
-            throw ">>> Serial port reading timeout";
+            throw ">>> TCP reading timeout";
         }
 
     }

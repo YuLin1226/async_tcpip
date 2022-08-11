@@ -13,9 +13,15 @@ void gManualSendRobotCommand(Server& srv)
                 std::cout << "Enter robot command id: ";
                 std::string id;
                 std::getline(std::cin, id);
-                srv.getSession()->writeRobotArmMoveCommand(std::stoi(id));
-                srv.getSession()->readRobotArmResponse(std::stoi(id));
-                std::cout << "\n";
+                try
+                {
+                    srv.getSession()->writeRobotArmMoveCommand(std::stoi(id));
+                    auto a = srv.getSession()->readRobotArmResponse(std::stoi(id));
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
             }
             
         }

@@ -295,22 +295,28 @@
                         data_available = false;
                         std::cerr << ">>> readCallback Error " << error << std::endl;
                     }
-                    std::cout << "cancel timer.\n";
+                    std::cout << ">>> Reading finisher and cancel timer.\n";
                     timeout_->cancel();
                     data_available = true;
                 });
             
             timeout_->expires_from_now(boost::posix_time::seconds(20));
-            timeout_->async_wait(  
-                [&](const boost::system::error_code &error)
-                {
-                    if (!error)
-                    {
-                        data_available = false;
-                        socket_.cancel();
-                        std::cerr << ">>> Read timeout." << std::endl;
-                    }
-                });
+            // timeout_->async_wait(  
+            //     [&](const boost::system::error_code &error)
+            //     {
+            //         if (!error)
+            //         {
+            //             data_available = false;
+            //             socket_.cancel();
+            //             std::cerr << ">>> Read timeout." << std::endl;
+            //         }
+            //     });
+            timeout_->wait();
+            if(!data_available)
+            {
+                socket_.cancel();
+                std::cerr << ">>> Read timeout." << std::endl;
+            }
         }
         catch(const std::exception& e)
         {

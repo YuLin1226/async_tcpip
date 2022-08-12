@@ -25,6 +25,7 @@
     void session::writeRobotArmMoveCommand(const int move_id)
     {
         std::string move_cmd;
+        
         switch (move_id)
         {
             // active robot arm program.
@@ -143,17 +144,19 @@
 
         if(move_cmd == "")
         {
-            std::cout << ">>> Error: Wrong command id.\n";
+            std::cout << "[Output] Error: Wrong command id.\n";
             return;
         }
+
+        std::cout << "[Output] Send command: " << move_id << "\n";
 
         boost::asio::async_write(
             socket_,
             boost::asio::buffer(move_cmd + "\r\n"),
-            [&, self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
+            [&](boost::system::error_code error, std::size_t bytes_transferred)
             {
                 // cout bug, can't print out move_id correctly.
-                std::cout << ">>> Send command: " << move_id << "\n";
+                // std::cout << "[Output] Send command: " << move_id << "\n";
             });
     }
 
@@ -293,9 +296,9 @@
                     if (error)
                     {
                         data_available = false;
-                        std::cerr << ">>> readCallback Error " << error << std::endl;
+                        std::cerr << "[Output] readCallback Error " << error << std::endl;
                     }
-                    std::cout << ">>> Reading finisher and cancel timer.\n";
+                    std::cout << "[Output] Reading finished and cancel timer.\n";
                     timeout_->cancel();
                     data_available = true;
                 });
@@ -308,19 +311,19 @@
             //         {
             //             data_available = false;
             //             socket_.cancel();
-            //             std::cerr << ">>> Read timeout." << std::endl;
+            //             std::cerr << "[Output] Read timeout." << std::endl;
             //         }
             //     });
             timeout_->wait();
             if(!data_available)
             {
                 socket_.cancel();
-                std::cerr << ">>> Read timeout." << std::endl;
+                std::cerr << "[Output] Read timeout." << std::endl;
             }
         }
         catch(const std::exception& e)
         {
-            std::cerr << ">>> Read exception. " << e.what() << '\n';
+            std::cerr << "[Output] Read exception. " << e.what() << '\n';
         }
         
 
@@ -332,12 +335,12 @@
         }
         else
         {
-            throw ">>> TCP reading timeout";
+            throw "[Output] TCP reading timeout";
         }
 
     }
 
-    void session::readRobotArmResponse(const int move_id, std::vector<char>& char_vector, bool& read_success)
+    void session::readRobotArmResponse(const int move_id, std::vector<char>& char_vector, int& read_status)
     {
         
         int data_size;
@@ -458,7 +461,7 @@
         }
 
         auto self(shared_from_this());
-        read_success = false;
+        read_status = 0;
         char_vector = std::vector<char>(data_size);
 
         try
@@ -471,11 +474,14 @@
                 {
                     if (error)
                     {
-                        read_success = false;
-                        std::cerr << ">>> readCallback Error " << error << std::endl;
+                        read_status = -1;
+                        std::cerr << "[Output] readCallback Error " << error << std::endl;
                     }
-                    timeout_->cancel();
-                    read_success = true;
+                    else
+                    {
+                        read_status = 1;
+                        timeout_->cancel();
+                    }
                 });
             
             timeout_->expires_from_now(boost::posix_time::seconds(5));
@@ -484,15 +490,18 @@
                 {
                     if (!error)
                     {
-                        read_success = false;
                         socket_.cancel();
-                        std::cerr << ">>> Read timeout." << std::endl;
+                        std::cerr << "[Output] Read timeout." << std::endl;
+                    }
+                    else
+                    {
+                        std::cerr << "[Output] Timer destroyed." << std::endl;
                     }
                 });
         }
         catch(const std::exception& e)
         {
-            std::cerr << ">>> Read exception. " << e.what() << '\n';
+            std::cerr << "[Output] Read exception. " << e.what() << '\n';
         }
         
         

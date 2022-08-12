@@ -1,5 +1,6 @@
 #include "server.hpp"
-
+#include <thread>
+#include <chrono>
 
 void gManualSendRobotCommand(Server& srv)
 {
@@ -10,18 +11,22 @@ void gManualSendRobotCommand(Server& srv)
             }
             else
             {
-                std::cout << "Enter robot command id: ";
+                std::cout << "\n>>> Enter robot command id: ";
                 std::string id;
                 std::getline(std::cin, id);
             
 
                 try
                 {
+                    int read_status;
                     std::vector<char> data;
-                    bool read_success;
-                    std::cout << read_success;
                     srv.getSession()->writeRobotArmMoveCommand(std::stoi(id));
-                    srv.getSession()->readRobotArmResponse(std::stoi(id), data, read_success);
+                    srv.getSession()->readRobotArmResponse(std::stoi(id), data, read_status);
+                    while(read_status == 0)
+                    {
+                        // do nothing, just wait.
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     // auto a = srv.getSession()->readRobotArmResponse(std::stoi(id));
                 }
                 catch(const std::exception& e)
@@ -39,7 +44,6 @@ int main()
 
     try
     {
-        std::cout << ">>> Server starts" << std::endl;
         boost::asio::io_context io_context;
         int port = 6688;
         Server server(io_context, port);

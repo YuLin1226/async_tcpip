@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include <thread>
 #include <chrono>
+#include <sstream>
 
 void gManualSendRobotCommand(Server& srv)
 {
@@ -27,6 +28,15 @@ void gManualSendRobotCommand(Server& srv)
                         // do nothing, just wait.
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    if(read_status==1)
+                    {
+                        std::cout << "[Output] Received data: ";
+                        for(auto& i: data)
+                        {
+                            std::cout << i;
+                        }
+                        std::cout <<"\n";
+                    }
                     // auto a = srv.getSession()->readRobotArmResponse(std::stoi(id));
                 }
                 catch(const std::exception& e)

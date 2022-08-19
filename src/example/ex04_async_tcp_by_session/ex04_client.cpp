@@ -53,19 +53,19 @@ public:
         //                                         this, 
         //                                         boost::asio::placeholders::error));
 
-        boost::asio::async_write(
-            *socket_ptr,
-            boost::asio::buffer("Hi, this is ex04 client.\n"),
-            [&](boost::system::error_code error, std::size_t bytes_transferred)
-            {
-                std::cout << ">>> send message completed" << std::endl;
-            });
-
         socket_ptr->async_read_some(boost::asio::buffer(buffer_),
                                     boost::bind(&this_type::readHandler, 
                                                 this, 
                                                 boost::asio::placeholders::error,
                                                 socket_ptr));
+        boost::asio::async_write(
+            *socket_ptr,
+            boost::asio::buffer("$1,safe,0,0,done$\n"),
+            [&](boost::system::error_code error, std::size_t bytes_transferred)
+            {
+                std::cout << ">>> send message completed" << std::endl;
+            });
+
     }
 
     void readHandler(const boost::system::error_code& ec, std::shared_ptr<socket_type> socket_ptr)

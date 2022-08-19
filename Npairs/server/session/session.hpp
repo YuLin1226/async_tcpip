@@ -16,11 +16,13 @@ public:
      * @brief Write data to client. Child sessions need to design their own function.
      */
     virtual void writeMessage() = 0;
+    virtual void writeMessage(const int) = 0;
 
     /**
      * @brief Read data from client. Child sessions need to design their own function.
      */
     virtual void readMessage() = 0;
+    virtual void readMessage(const int) = 0;
 
 protected:
     

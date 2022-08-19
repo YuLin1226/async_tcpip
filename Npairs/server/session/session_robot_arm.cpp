@@ -10,12 +10,13 @@ SessionRobotArm::~SessionRobotArm()
     std::cout << ">>> Session <ROBOTARM> destroyed." << std::endl;
 }
 
-void SessionRobotArm::writeMessage()
+void SessionRobotArm::writeMessage(const int move_id)
 {
     // TODO: command if as arg.
     // if the command id does not exist, throw error.
 }
 
-void SessionRobotArm::readMessage()
-{
+
+void SessionRobotArm::readMessage(const int move_id)
+{     
 }

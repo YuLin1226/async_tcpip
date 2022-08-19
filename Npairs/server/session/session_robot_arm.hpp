@@ -11,9 +11,9 @@ public:
 
     ~SessionRobotArm();
 
-    void writeMessage() override;
+    void writeMessage(const int move_id) override;
 
-    void readMessage() override;
+    void readMessage(const int move_id) override;
 
 
 

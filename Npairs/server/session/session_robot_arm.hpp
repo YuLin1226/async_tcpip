@@ -20,8 +20,7 @@ public:
 
     void readMessage(const int move_id) override;
 
-
-
+    ActionStatus checkActionStatus(const int move_id) override;
 
 };
 

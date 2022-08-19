@@ -316,3 +316,15 @@ void SessionRobotArm::readMessage(const int move_id)
     }
 
 }
+
+Session::ActionStatus SessionRobotArm::checkActionStatus(const int move_id)
+{
+    auto move_def = getMoveFeedbackDefinition(move_id);
+    /*
+        if buffer == move_def, return ActionStatus::SUCCESS
+
+        if buffer != move_def, return ActionStatus::FAILURE
+
+        if timer expire, return ActionStatus::UNKNOWN
+    */
+}

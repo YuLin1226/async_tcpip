@@ -4,6 +4,9 @@
 class Session : public std::enable_shared_from_this<Session>
 {
 public:
+    enum class ActionStatus {SUCCESS, FAILURE, UNKNOWN};
+
+public:
     Session(){}
 
     Session(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr, std::shared_ptr<boost::asio::deadline_timer> timer_ptr)
@@ -24,6 +27,12 @@ public:
     virtual void readMessage() = 0;
     virtual void readMessage(const int) = 0;
 
+    /**
+     * @brief Check action completed successfully or not.
+     */
+    virtual ActionStatus checkActionStatus() = 0;
+    virtual ActionStatus checkActionStatus(const int) = 0;
+    
 protected:
     
     std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr_;

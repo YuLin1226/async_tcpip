@@ -25,12 +25,14 @@ void TCPServer::accept()
 
 void TCPServer::robot_arm_accept()
 {
+    // local ptr can be declared instead of member ptr?
     robot_arm_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
+    auto timer_ptr = std::make_shared<std::shared_ptr<boost::asio::deadline_timer>>(io_context_);
     robot_arm_acceptor_.async_accept(
         *robot_arm_socket_ptr_, 
         [&](boost::system::error_code error)
         {
-            std::make_shared<SessionRobotArm>(std::move(*robot_arm_socket_ptr_));
+            std::make_shared<SessionRobotArm>(std::move(*robot_arm_socket_ptr_), std::move(*timer_ptr));
             robot_arm_accept();
         });
 }
@@ -38,11 +40,12 @@ void TCPServer::robot_arm_accept()
 void TCPServer::platform_accept()
 {
     platform_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
+    auto timer_ptr = std::make_shared<std::shared_ptr<boost::asio::deadline_timer>>(io_context_);
     platform_acceptor_.async_accept(
         *platform_socket_ptr_, 
         [&](boost::system::error_code error)
         {
-            std::make_shared<SessionPlatform>(std::move(*platform_socket_ptr_));
+            std::make_shared<SessionPlatform>(std::move(*platform_socket_ptr_), std::move(*timer_ptr));
             platform_accept();
         });
 }

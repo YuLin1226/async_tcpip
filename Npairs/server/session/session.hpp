@@ -6,8 +6,9 @@ class Session : public std::enable_shared_from_this<Session>
 public:
     Session(){}
 
-    Session(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr)
+    Session(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr, std::shared_ptr<boost::asio::deadline_timer> timer_ptr)
     : socket_ptr_(std::move(socket_ptr))
+    , timer_ptr_(std::move(timer_ptr))
     {
     }
 
@@ -24,5 +25,6 @@ public:
 protected:
     
     std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr_;
+    std::shared_ptr<boost::asio::deadline_timer> timer_ptr_;
 
 };

@@ -7,7 +7,7 @@ private:
 
 public:
 
-    SessionRobotArm(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr);
+    SessionRobotArm(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr, std::shared_ptr<boost::asio::deadline_timer> timer_ptr);
 
     ~SessionRobotArm();
 

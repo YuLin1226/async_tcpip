@@ -1,3 +1,7 @@
+#ifndef _SESSION_ROBOT_ARM_HPP_
+#define _SESSION_ROBOT_ARM_HPP_
+
+
 #include "session.hpp"
 
 class SessionRobotArm : public Session
@@ -24,3 +28,4 @@ public:
 
 };
 
+#endif

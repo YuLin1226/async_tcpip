@@ -1,3 +1,6 @@
+#ifndef _SERVER_HPP_
+#define _SERVER_HPP_
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -38,7 +41,7 @@ public:
 
 
 
-
+#endif
 
 
 

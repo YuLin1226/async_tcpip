@@ -1,3 +1,6 @@
+#ifndef _SESSION_PLATFORM_HPP_
+#define _SESSION_PLATFORM_HPP_
+
 #include "session.hpp"
 
 class SessionPlatform : public Session
@@ -19,3 +22,4 @@ public:
 
 
 
+#endif

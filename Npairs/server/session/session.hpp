@@ -1,3 +1,6 @@
+#ifndef _SESSION_HPP_
+#define _SESSION_HPP_
+
 #include <iostream>
 #include <boost/asio.hpp>
 
@@ -40,3 +43,5 @@ protected:
     std::vector<char> received_data_;
 
 };
+
+#endif

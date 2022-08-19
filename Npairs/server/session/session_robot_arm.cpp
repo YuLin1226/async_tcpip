@@ -282,13 +282,13 @@ void SessionRobotArm::readMessage(const int move_id)
     int data_size = getMoveCommand(move_id).length();
     auto self(shared_from_this());
     bool data_available = false;
-    std::vector<char> char_vector(data_size);
-
+    // std::vector<char> char_vector(data_size);
+    bool end_this_function = false;
     try
     {
         boost::asio::async_read( 
             *socket_ptr_, 
-            boost::asio::buffer(char_vector, data_size),
+            boost::asio::buffer(received_data_, data_size),
             [&](const boost::system::error_code &error, std::size_t bytes_transferred)
             {
                 if (error)
@@ -299,15 +299,35 @@ void SessionRobotArm::readMessage(const int move_id)
                 std::cout << "[Output] Reading finished and cancel timer.\n";
                 timer_ptr_->cancel();
                 data_available = true;
+                end_this_function = true;
             });
         
         timer_ptr_->expires_from_now(boost::posix_time::seconds(MOVE_WAIT_TIME));
-        // Use sync wait to block following actions.
-        timer_ptr_->wait();
-        if(!data_available)
+        // // Use sync wait to block following actions.
+        // timer_ptr_->wait();
+        // if(!data_available)
+        // {
+        //     socket_ptr_->cancel();
+        //     std::cerr << "[Output] Read timeout." << std::endl;
+        // }
+        timer_ptr_->async_wait(  
+            [&](const boost::system::error_code &error)
+            {
+                if (!error)
+                {
+                    socket_ptr_->cancel();
+                    std::cerr << "[Output] Read timeout." << std::endl;
+                }
+                else
+                {
+                    std::cerr << "[Output] Timer destroyed." << std::endl;
+                }
+                end_this_function = true;
+            });
+        
+        while(!end_this_function)
         {
-            socket_ptr_->cancel();
-            std::cerr << "[Output] Read timeout." << std::endl;
+            // silly blocking, needs a smart way.
         }
     }
     catch(const std::exception& e)
@@ -327,4 +347,12 @@ Session::ActionStatus SessionRobotArm::checkActionStatus(const int move_id)
 
         if timer expire, return ActionStatus::UNKNOWN
     */
+    for(auto i=0; i<received_data_.size(); i++)
+    {
+        if(received_data_[i] != move_def[i])
+            return Session::ActionStatus::FAILURE;
+    }
+
+    return Session::ActionStatus::SUCCESS;
+
 }

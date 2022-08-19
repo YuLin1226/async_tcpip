@@ -37,5 +37,6 @@ protected:
     
     std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr_;
     std::shared_ptr<boost::asio::deadline_timer> timer_ptr_;
+    std::vector<char> received_data_;
 
 };

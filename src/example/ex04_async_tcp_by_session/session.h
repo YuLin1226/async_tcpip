@@ -18,21 +18,22 @@ public:
     void start()
     {
         // readMsg(10);
+        writeMsg();
         boost::asio::async_read_until(socket, 
                                       streambuf, 
-                                      '\n', 
+                                      "e$", 
                                       [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
         {
             std::cout << std::istream(&self->streambuf).rdbuf();
         });
-        writeMsg();
+        
     }
 
     void writeMsg()
     {
         boost::asio::async_write(
             socket,
-            boost::asio::buffer("Hello asio client, this is asio server\n"),
+            boost::asio::buffer("$1,safe,0,0,move$\n"),
             [self = shared_from_this()](boost::system::error_code error, std::size_t bytes_transferred)
             {
                 std::cout << ">>> send message completed" << std::endl;
@@ -75,5 +76,6 @@ private:
 
     boost::asio::ip::tcp::socket socket;
     boost::asio::streambuf streambuf;
-    std::vector<char> received_data = std::vector<char>(10);
+    std::vector<char> received_data = std::vector<char>(100);
+    
 };

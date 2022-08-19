@@ -12,7 +12,8 @@ SessionPlatform::~SessionPlatform()
 
 void SessionPlatform::writeMessage()
 {
-
+    // TODO: command if as arg.
+    // if the command id does not exist, throw error.
 }
 
 void SessionPlatform::readMessage()

@@ -12,10 +12,10 @@ SessionRobotArm::~SessionRobotArm()
 
 void SessionRobotArm::writeMessage()
 {
-
+    // TODO: command if as arg.
+    // if the command id does not exist, throw error.
 }
 
 void SessionRobotArm::readMessage()
 {
-    
 }

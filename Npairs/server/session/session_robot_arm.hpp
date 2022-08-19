@@ -4,6 +4,11 @@ class SessionRobotArm : public Session
 {
 
 private:
+    unsigned int MOVE_WAIT_TIME = 20;
+
+    std::string getMoveCommand(const int move_id);
+
+    std::string getMoveFeedbackDefinition(const int move_id);
 
 public:
 

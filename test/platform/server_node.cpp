@@ -50,7 +50,18 @@ void gManualSendRobotCommand(Server& srv)
                         vehicle_postion_state,
                         recipe,
                         tray_number);
-                    // srv.getSession()->readRobotArmResponse(std::stoi(id), data, read_status);
+
+                    srv.getSession()->readRobotArmResponse(
+                        "0",
+                        "0",
+                        "0",
+                        send_mission,
+                        "0",
+                        "0",
+                        recipe,
+                        "0", 
+                        data,
+                        read_status);
                     while(read_status == 0)
                     {
                         // do nothing, just wait.

@@ -68,6 +68,30 @@
         return cmd;
     }
 
+    std::string session::getMoveREPLY(  std::string platform_state, 
+                                        std::string send_mission,
+                                        std::string send_mission_state, 
+                                        std::string reply_mission,
+                                        std::string reply_mission_state,
+                                        std::string platform_position_state,
+                                        std::string recipe,
+                                        std::string trouble_shooting)
+    {
+        std::string reply;
+        reply += "@";
+        reply += "0}" + platform_state + ",";
+        reply += "1}" + send_mission + ",";
+        reply += "2}" + send_mission_state + ",";
+        reply += "3}" + reply_mission + ",";
+        reply += "4}" + reply_mission_state + ",";
+        reply += "5}" + platform_position_state + ",";
+        reply += "6}" + recipe + ",";
+        reply += "7}" + trouble_shooting;
+        reply += "#";
+
+        return reply;
+    }
+
     void session::writeRobotArmMoveCommand( std::string vehicle_state, 
                                             std::string send_mission,
                                             std::string send_mission_state, 
@@ -97,75 +121,19 @@
             });
     }
 
-    std::vector<char> session::readRobotArmResponse(const int move_id)
+    void session::readRobotArmResponse( std::string vehicle_state, 
+                                        std::string send_mission,
+                                        std::string send_mission_state, 
+                                        std::string reply_mission,
+                                        std::string reply_mission_state,
+                                        std::string vehicle_position_state,
+                                        std::string recipe,
+                                        std::string tray_number, 
+                                        std::vector<char>& char_vector, 
+                                        int& read_status)
     {
         
-        int data_size = getMoveCMD(move_id).length();
-
-        auto self(shared_from_this());
-        bool data_available = false;
-        std::vector<char> char_vector(data_size);
-
-        try
-        {
-            
-            boost::mutex::scoped_lock scoped_locker(*mutex_);
-            boost::asio::async_read( 
-                socket_, 
-                boost::asio::buffer(char_vector, data_size),
-                [&](const boost::system::error_code &error, std::size_t bytes_transferred)
-                {
-                    if (error)
-                    {
-                        data_available = false;
-                        std::cerr << "[Output] readCallback Error " << error << std::endl;
-                    }
-                    std::cout << "[Output] Reading finished and cancel timer.\n";
-                    timeout_->cancel();
-                    data_available = true;
-                });
-            
-            timeout_->expires_from_now(boost::posix_time::seconds(20));
-            // timeout_->async_wait(  
-            //     [&](const boost::system::error_code &error)
-            //     {
-            //         if (!error)
-            //         {
-            //             data_available = false;
-            //             socket_.cancel();
-            //             std::cerr << "[Output] Read timeout." << std::endl;
-            //         }
-            //     });
-            timeout_->wait();
-            if(!data_available)
-            {
-                socket_.cancel();
-                std::cerr << "[Output] Read timeout." << std::endl;
-            }
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << "[Output] Read exception. " << e.what() << '\n';
-        }
-        
-
-        // Although a timer is set, but this if condition is not related to io object, so it won't be blocked.
-        // Hence the function quickly jumps to this if condition, and throw.
-        if (data_available)
-        {
-            return char_vector;
-        }
-        else
-        {
-            throw "[Output] TCP reading timeout";
-        }
-
-    }
-
-    void session::readRobotArmResponse(const int move_id, std::vector<char>& char_vector, int& read_status)
-    {
-        
-        int data_size = getMoveCMD(move_id).length();
+        int data_size = getMoveREPLY(vehicle_state, send_mission, send_mission_state, reply_mission, reply_mission_state, vehicle_position_state, recipe, tray_number).length();
         auto self(shared_from_this());
         read_status = 0;
         char_vector = std::vector<char>(data_size);

@@ -36,9 +36,17 @@ public:
     // }
 
     void initialization();
+    void readRobotArmResponse(  std::string vehicle_state, 
+                                std::string send_mission,
+                                std::string send_mission_state, 
+                                std::string reply_mission,
+                                std::string reply_mission_state,
+                                std::string vehicle_position_state,
+                                std::string recipe,
+                                std::string tray_number, 
+                                std::vector<char>& char_vector, 
+                                int& read_status);
 
-    std::vector<char> readRobotArmResponse(const int move_id);
-    void readRobotArmResponse(const int move_id, std::vector<char>& char_vector, int& read_status);
     std::string getMoveCMD(const int move_id);
     std::string getMoveCMD( std::string vehicle_state, 
                             std::string send_mission,
@@ -48,7 +56,14 @@ public:
                             std::string vehicle_position_state,
                             std::string recipe,
                             std::string tray_number);
-
+    std::string getMoveREPLY(   std::string platform_state, 
+                                std::string send_mission,
+                                std::string send_mission_state, 
+                                std::string reply_mission,
+                                std::string reply_mission_state,
+                                std::string platform_position_state,
+                                std::string recipe,
+                                std::string trouble_shooting);
 
 
 private:

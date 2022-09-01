@@ -47,6 +47,8 @@ public:
                                 std::vector<char>& char_vector, 
                                 int& read_status);
 
+    void readRobotArmResponse(std::vector<char>&char_vector, int& read_status);
+
     std::string getMoveCMD(const int move_id);
     std::string getMoveCMD( std::string vehicle_state, 
                             std::string send_mission,
@@ -64,6 +66,7 @@ public:
                                 std::string platform_position_state,
                                 std::string recipe,
                                 std::string trouble_shooting);
+
 
 
 private:

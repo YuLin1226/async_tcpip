@@ -1,4 +1,6 @@
 #include "session.hpp"
+#include <iostream>
+#include <typeinfo>
 
 // namespace
 
@@ -180,6 +182,71 @@
         
         
 
+    }
+
+    void session::readRobotArmResponse(std::vector<char>& char_vector, int& read_status)
+    {
+
+        auto self(shared_from_this());
+        read_status = 0;
+        // char_vector = std::vector<char>(data_size);
+        boost::asio::streambuf streambuf;
+        try
+        {
+            boost::mutex::scoped_lock scoped_locker(*mutex_);
+
+            boost::asio::async_read_until(
+                socket_, 
+                streambuf, 
+                "}#", 
+            [&](boost::system::error_code error, std::size_t bytes_transferred)
+            {
+                if (error)
+                {
+                    read_status = -1;
+                    std::cerr << "[Output] readCallback Error " << error << std::endl;
+                }
+                else
+                {
+                    read_status = 1;
+                    timeout_->cancel();
+                    char_vector = std::vector<char>(streambuf.size());
+                    boost::asio::buffer_copy(boost::asio::buffer(char_vector), streambuf.data());
+                    std::cout << "[Output] Received data: ";
+                    for(auto& i: char_vector)
+                    {
+                        std::cout << i;
+                    }
+                    std::cout <<"\n";
+                }
+            });
+
+            
+            timeout_->expires_from_now(boost::posix_time::seconds(20));
+            timeout_->async_wait(  
+                [&](const boost::system::error_code &error)
+                {
+                    if (!error)
+                    {
+                        socket_.cancel();
+                        std::cerr << "[Output] Read timeout." << std::endl;
+                    }
+                    else
+                    {
+                        std::cerr << "[Output] Timer destroyed." << std::endl;
+                    }
+                });
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << "[Output] Read exception. " << e.what() << '\n';
+        }
+
+
+
+
+
+        
     }
 
 

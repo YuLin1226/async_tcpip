@@ -62,6 +62,9 @@ void gManualSendRobotCommand(Server& srv)
                         "0", 
                         data,
                         read_status);
+
+                    // srv.getSession()->readRobotArmResponse(data, read_status);
+
                     while(read_status == 0)
                     {
                         // do nothing, just wait.

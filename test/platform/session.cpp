@@ -143,6 +143,8 @@
         try
         {
             boost::mutex::scoped_lock scoped_locker(*mutex_);
+            timeout_->expires_from_now(boost::posix_time::seconds(20));
+            
             boost::asio::async_read( 
                 socket_, 
                 boost::asio::buffer(char_vector, data_size),
@@ -160,7 +162,6 @@
                     }
                 });
             
-            timeout_->expires_from_now(boost::posix_time::seconds(20));
             timeout_->async_wait(  
                 [&](const boost::system::error_code &error)
                 {

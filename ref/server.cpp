@@ -16,21 +16,27 @@ public:
 
 private:
 
-    void accept() {
+    void accept() 
+    {
         socket_ = std::make_unique<boost::asio::ip::tcp::socket>(ioContext_);
 
         acceptor_.async_accept(*socket_, [&] (boost::system::error_code error)
         {
             auto s = std::make_shared<Session>(ioContext_, std::move(*socket_));
-            s->start([s](const Frame &frame){
-                auto frameSize = frame.parseFrameSize();
-                frame.print(frameSize, std::cout);
-                //todo: check this
-                std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
-                s->write(data.data(), 4);
-            },[](){
-                std::cerr << "session broken" << std::endl;
-            });
+
+            s->start(
+                [s](const Frame &frame)
+                {
+                    auto frameSize = frame.parseFrameSize();
+                    frame.print(frameSize, std::cout);
+                    //todo: check this
+                    std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
+                    s->write(data.data(), 4);
+                },
+                []()
+                {
+                    std::cerr << "session broken" << std::endl;
+                });
             accept();
         });
     }

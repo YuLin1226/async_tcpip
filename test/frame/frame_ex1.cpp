@@ -21,74 +21,96 @@ namespace Frame
             {
                 if (matchStatus == -1) 
                 {
-                    if (static_cast<unsigned char>(*d) == 0x0a) 
+                    if (static_cast<unsigned char>(*d) == ('$' & 0xFF)) 
                     {
                         matchStatus = 0;
                         startPosition = i;
-                    } 
-                    else 
-                    {
-                        matchStatus = -1;
-                    }
-                } 
-                else if (matchStatus == 0) 
-                {
-                    if (static_cast<unsigned char>(*d) == 0x0b) 
-                    {
-                        matchStatus = 1;
-                    } 
-                    else 
-                    {
-                        matchStatus = -1;
-                    }
-                } 
-                else if (matchStatus == 1) 
-                {
-                    if (static_cast<unsigned char>(*d) == 0x0c) 
-                    {
-                        matchStatus = 2;
-                    } 
-                    else 
-                    {
-                        matchStatus = -1;
-                    }
-                } 
-                else if (matchStatus == 2) 
-                {
-                    if (static_cast<unsigned char>(*d) == 0x0d) 
-                    {
-                        matchStatus = 3;
                         break;
                     } 
-                    else 
-                    {
-                        matchStatus = -1;
-                    }
-                }
+                    // else 
+                    // {
+                    //     matchStatus = -1;
+                    // }
+                } 
+                // else if (matchStatus == 0) 
+                // {
+                //     if (static_cast<unsigned char>(*d) == 0x0b) 
+                //     {
+                //         matchStatus = 1;
+                //     } 
+                //     else 
+                //     {
+                //         matchStatus = -1;
+                //     }
+                // } 
+                // else if (matchStatus == 1) 
+                // {
+                //     if (static_cast<unsigned char>(*d) == 0x0c) 
+                //     {
+                //         matchStatus = 2;
+                //     } 
+                //     else 
+                //     {
+                //         matchStatus = -1;
+                //     }
+                // } 
+                // else if (matchStatus == 2) 
+                // {
+                //     if (static_cast<unsigned char>(*d) == 0x0d) 
+                //     {
+                //         matchStatus = 3;
+                //         break;
+                //     } 
+                //     else 
+                //     {
+                //         matchStatus = -1;
+                //     }
+                // }
             }
-            if (matchStatus == 3) 
+            if (matchStatus == 0) 
             {
                 //give up data before startPosition
                 streambuf_.consume(startPosition);
             }
         }
-        return matchStatus == 3;
+        return matchStatus == 0;
     }
 
     size_t FrameEX::parseFrameSize() const 
     {
-        size_t frameSize = std::numeric_limits<size_t>::max();
-        if (streambuf_.size() >=4) 
-        {
-            auto d = boost::asio::buffers_begin(streambuf_.data());
-            d += 4;
-            frameSize = static_cast<unsigned char>(*d);
-            ++d;
-            size_t highByte = static_cast<unsigned char>(*d);
-            frameSize += highByte * 256;
+        // size_t frameSize = std::numeric_limits<size_t>::max();
+        // if (streambuf_.size() >=4) 
+        // {
+        //     auto d = boost::asio::buffers_begin(streambuf_.data());
+        //     d += 4;
+        //     frameSize = static_cast<unsigned char>(*d);
+        //     ++d;
+        //     size_t highByte = static_cast<unsigned char>(*d);
+        //     frameSize += highByte * 256;
 
-            //note: according to spec. we should modify frameSize
+        //     //note: according to spec. we should modify frameSize
+        // }
+
+        int matchStatus = -1;
+        size_t startPosition = -1;
+        auto d = boost::asio::buffers_begin(streambuf_.data());
+        auto dend = boost::asio::buffers_end(streambuf_.data());
+        for (size_t i=0; d!=dend; ++d, ++i) 
+        {
+        
+            if (static_cast<unsigned char>(*d) == ('$' & 0xFF)) 
+            {
+                matchStatus += 1;
+                startPosition = i;
+            }
+            
+            if (matchStatus == 1)
+            {
+                break;
+            }
         }
+
+        size_t frameSize = startPosition +1 +2;
         return frameSize;
     }
 

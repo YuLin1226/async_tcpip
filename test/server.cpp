@@ -24,7 +24,7 @@ namespace TCP
             *platform_socket_ptr_, 
             [&](boost::system::error_code error)
             {
-                // std::make_shared<SessionPlatform>(std::move(*platform_socket_ptr_), std::move(*timer_ptr));
+                std::make_shared<Session::SessionEx>(io_context_, std::move(*platform_socket_ptr_));
                 platform_accept();
             });
     }

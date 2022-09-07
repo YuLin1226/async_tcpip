@@ -21,6 +21,9 @@ private:
     std::shared_ptr<boost::asio::ip::tcp::socket> robot_arm_socket_ptr_;
     std::shared_ptr<boost::asio::ip::tcp::socket> platform_socket_ptr_;
 
+    std::shared_ptr<Session::SessionPlatform> platform_session_;
+    // std::shared_ptr<Session::SessionRobotArm> robotarm_session_;
+
 public:
     TCPServer(boost::asio::io_context& io_context);
     
@@ -33,9 +36,8 @@ public:
     void robot_arm_accept();
     void platform_accept();
 
-    void readFromSpecifiedClient(Session* session);
-    void writeToSpecifiedClient(Session* session);
-
+    std::shared_ptr<Session::SessionPlatform> getPlatformSession();
+    // std::shared_ptr<Session::SessionRobotArm> getRobotArmSession();
 
 };
 

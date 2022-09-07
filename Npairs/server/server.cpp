@@ -19,7 +19,7 @@ TCPServer::~TCPServer()
 
 void TCPServer::accept()
 {
-    robot_arm_accept();
+    // robot_arm_accept();
     platform_accept();
 }
 
@@ -40,22 +40,24 @@ void TCPServer::robot_arm_accept()
 void TCPServer::platform_accept()
 {
     platform_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
-    auto timer_ptr = std::make_shared<std::shared_ptr<boost::asio::deadline_timer>>(io_context_);
     platform_acceptor_.async_accept(
         *platform_socket_ptr_, 
         [&](boost::system::error_code error)
         {
-            std::make_shared<SessionPlatform>(std::move(*platform_socket_ptr_), std::move(*timer_ptr));
+            if(!platform_session_)
+            {
+                platform_session_ = std::make_shared<Session::SessionPlatform>(std::move(*platform_socket_ptr_), std::move(*timer_ptr));
+            }
             platform_accept();
         });
 }
 
-void TCPServer::readFromSpecifiedClient(Session* session)
+std::shared_ptr<Session::SessionPlatform> TCPServer::getPlatformSession()
 {
-    session->readMessage();
+    return platform_session_;
 }
 
-void TCPServer::writeToSpecifiedClient(Session* session)
-{
-    session->writeMessage();
-}
+// std::shared_ptr<Session::SessionRobotArm> TCPServer::getRobotArmSession()
+// {
+//     return robotarm_session_;
+// }

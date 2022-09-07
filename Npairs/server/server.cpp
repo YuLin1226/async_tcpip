@@ -46,20 +46,20 @@ void TCPServer::platform_accept()
         [&, this](boost::system::error_code error)
         {
             platform_session_ = std::make_shared<Session::SessionPlatform>(io_context_, std::move(*platform_socket_ptr_));
-            // platform_session_->start(
-            //     [this](const Frame::FramePlatform &frame)
-            //     {
-            //         auto frameSize = frame.parseFrameSize();
-            //         frame.print(frameSize, std::cout);
-            //         platform_session_->start_decode_data_ = 0;
-            //         //todo: check this
-            //         // std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
-            //         // s->write(data.data(), 4);
-            //     },
-            //     []()
-            //     {
-            //         std::cerr << "session broken" << std::endl;
-            //     });            
+            platform_session_->start(
+                [this](const Frame::FramePlatform &frame)
+                {
+                    auto frameSize = frame.parseFrameSize();
+                    frame.print(frameSize, std::cout);
+                    platform_session_->start_decode_data_ = 0;
+                    //todo: check this
+                    std::array<unsigned char, 4> data{'1','2','3','4'};
+                    platform_session_->write(data.data(), 4);
+                },
+                []()
+                {
+                    std::cerr << "session broken" << std::endl;
+                });            
             platform_accept();
         });
 }

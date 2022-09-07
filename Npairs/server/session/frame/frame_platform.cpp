@@ -46,19 +46,27 @@ namespace Frame
         auto dend = boost::asio::buffers_end(streambuf_.data());
         for (size_t i=0; d!=dend; ++d, ++i) 
         {
-        
-            if (static_cast<unsigned char>(*d) == ('#' & 0xFF)) 
+            if(i == 0)
             {
-                matchStatus += 1;
-                startPosition = i;
+                if(static_cast<unsigned char>(*d) != ('@' & 0xFF))
+                {
+                    break;   
+                }
             }
-            
-            if (matchStatus == 1)
+            else
             {
-                break;
+                if (static_cast<unsigned char>(*d) == ('@' & 0xFF)) 
+                {
+                    matchStatus += 1;
+                    startPosition = i;
+                }
+                
+                if (matchStatus == 1)
+                {
+                    break;
+                }
             }
         }
-
         size_t frameSize = startPosition +1;
         return frameSize;
     }

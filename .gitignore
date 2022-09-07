@@ -1,3 +1,4 @@
 src/example/*/*.exe
 test/*.exe
 .vscode/
+Npairs/server/*.exe

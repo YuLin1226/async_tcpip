@@ -2,10 +2,11 @@
 
 TCPServer::TCPServer(boost::asio::io_context& io_context)
 : io_context_(io_context)
-, robot_arm_acceptor_(io_context_, 
-                      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), ROBOTARM_PORT))
+// , robot_arm_acceptor_(io_context_, 
+//                       boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), ROBOTARM_PORT))
 , platform_acceptor_(io_context_, 
                      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), PLATFORM_PORT))
+, platform_session_(NULL)
 {
     std::cout << ">>> Server created." << std::endl;
     accept();
@@ -20,6 +21,7 @@ TCPServer::~TCPServer()
 void TCPServer::accept()
 {
     // robot_arm_accept();
+    std::cout << ">>> Start acception." << std::endl;
     platform_accept();
 }
 
@@ -38,21 +40,33 @@ void TCPServer::accept()
 
 void TCPServer::platform_accept()
 {
-    auto platform_socket_ptr = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
+    auto platform_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
     platform_acceptor_.async_accept(
-        *platform_socket_ptr, 
+        *platform_socket_ptr_, 
         [&](boost::system::error_code error)
         {
-            if(!platform_session_)
-            {
-                platform_session_ = std::make_shared<Session::SessionPlatform>(io_context_, std::move(*platform_socket_ptr));
-            }
+            platform_session_ = std::make_shared<Session::SessionPlatform>(io_context_, std::move(*platform_socket_ptr_));
+            // platform_session_->start(
+            //     [this](const Frame::FramePlatform &frame)
+            //     {
+            //         auto frameSize = frame.parseFrameSize();
+            //         frame.print(frameSize, std::cout);
+            //         platform_session_->start_decode_data_ = 0;
+            //         //todo: check this
+            //         // std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
+            //         // s->write(data.data(), 4);
+            //     },
+            //     []()
+            //     {
+            //         std::cerr << "session broken" << std::endl;
+            //     });            
             platform_accept();
         });
 }
 
 std::shared_ptr<Session::SessionPlatform> TCPServer::getPlatformSession()
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     return platform_session_;
 }
 

@@ -6,6 +6,7 @@
 #include <boost/bind.hpp>
 // #include "session/session_robot_arm.hpp"
 #include "session/session_platform.hpp"
+#include <memory>
 
 
 class TCPServer
@@ -16,11 +17,15 @@ private:
     const unsigned int PLATFORM_PORT = 8888;
 
     boost::asio::io_context& io_context_;
-    boost::asio::ip::tcp::acceptor robot_arm_acceptor_;
+    // boost::asio::ip::tcp::acceptor robot_arm_acceptor_;
     boost::asio::ip::tcp::acceptor platform_acceptor_;
 
     std::shared_ptr<Session::SessionPlatform> platform_session_;
     // std::shared_ptr<Session::SessionRobotArm> robotarm_session_;
+
+    std::mutex mtx_;
+
+    std::shared_ptr<boost::asio::ip::tcp::socket> platform_socket_ptr_;
 
 public:
     TCPServer(boost::asio::io_context& io_context);

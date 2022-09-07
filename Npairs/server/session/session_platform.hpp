@@ -28,6 +28,7 @@ class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
 
         void write(unsigned char *pStart, size_t dataSize);
 
+        bool start_decode_data_;
     private:
         static const int PREPARE_READ_BUFFER_SIZE = 1024;
 
@@ -54,7 +55,7 @@ class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
         void moveFromQueueAndWrite();
         void onWrite(boost::system::error_code error, std::size_t bytesTransferred);
 
-        bool start_decode_data_;
+        
 };
 
 

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include "session/session_robot_arm.hpp"
+// #include "session/session_robot_arm.hpp"
 #include "session/session_platform.hpp"
 
 

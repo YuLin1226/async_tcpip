@@ -40,6 +40,7 @@ namespace Session
 
     void SessionPlatform::write(unsigned char *pStart, size_t dataSize) 
     {
+        start_decode_data_ = 1;
         //rule: we use mtxOutgoingQueue_ to protect outgoingQueue_
         //      async_write and complete handler are all run in io_context thread(given strand)
         std::lock_guard<std::mutex> lock(mtxOutgoingQueue_);

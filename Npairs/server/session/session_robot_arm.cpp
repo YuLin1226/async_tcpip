@@ -1,358 +1,226 @@
 #include "session_robot_arm.hpp"
+#include <iostream>
 
-SessionRobotArm::SessionRobotArm(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr, std::shared_ptr<boost::asio::deadline_timer> timer_ptr)
+namespace Session
 {
-    std::cout << ">>> Session <ROBOTARM> created." << std::endl;
-}
-
-SessionRobotArm::~SessionRobotArm()
-{
-    std::cout << ">>> Session <ROBOTARM> destroyed." << std::endl;
-}
-
-std::string SessionRobotArm::getMoveCommand(const int move_id)
-{
-    std::string move_cmd;    
-    switch (move_id)
+    
+    SessionRobotArm::SessionRobotArm(boost::asio::io_context& ioContext, boost::asio::ip::tcp::socket &&socket)
+    : socket_{std::move(socket)}
+    , writeStrand_{ioContext}
+    , readStrand_{ioContext}
+    , connectStatus_{ConnectionStatus::CONNECTED}
+    , isAsyncWriteCompleteHandlerCalled_{1}
+    , isAsyncReadCompleteHandlerCalled_{1}
+    , start_decode_data_{0}
+    , timer_(ioContext)
     {
-        // active robot arm program.
-        case 1: 
-            move_cmd = "$1,active,0,0,move$";
-            break;
-        // robot arm run "alignment"
-        case 2: 
-            move_cmd = "$2,align,0,0,move$";
-            break;
-        // robot arm run "no1 drill above"
-        case 11:
-            move_cmd = "$11,1,drillabove,0,move$";
-            break;
-        // robot arm run "no1 drill workplace"
-        case 12:
-            move_cmd = "$12,1,drillworkplace,0,move$";
-            break;
-        // robot arm run "no1 drill safe"
-        case 13:
-            move_cmd = "$13,1,drillsafe,0,move$";
-            break;
-        // robot arm run "no2 drill above"
-        case 21:
-            move_cmd = "$21,2,drillabove,0,move$";
-            break;
-        // robot arm run "no2 drill workplace"
-        case 22:
-            move_cmd = "$22,2,drillworkplace,0,move$";
-            break;
-        // robot arm run "no2 drill safe"
-        case 23:
-            move_cmd = "$23,2,drillsafe,0,move$";
-            break;
-        // robot arm run "no3 drill above"
-        case 31:
-            move_cmd = "$31,3,drillabove,0,move$";
-            break;
-        // robot arm run "no3 drill workplace"
-        case 32:
-            move_cmd = "$32,3,drillworkplace,0,move$";
-            break;
-        // robot arm run "no3 drill safe"
-        case 33:
-            move_cmd = "$33,3,drillsafe,0,move$";
-            break;
-        // robot arm run "no4 drill above"
-        case 41:
-            move_cmd = "$41,4,drillabove,0,move$";
-            break;
-        // robot arm run "no4 drill workplace"
-        case 42:
-            move_cmd = "$42,4,drillworkplace,0,move$";
-            break;
-        // robot arm run "no4 drill safe"
-        case 43:
-            move_cmd = "$43,4,drillsafe,0,move$";
-            break;
-        // robot arm run "no5 drill above"
-        case 51:
-            move_cmd = "$51,5,drillabove,0,move$";
-            break;
-        // robot arm run "no5 drill workplace"
-        case 52:
-            move_cmd = "$52,5,drillworkplace,0,move$";
-            break;
-        // robot arm run "no5 drill safe"
-        case 53:
-            move_cmd = "$53,5,drillsafe,0,move$";
-            break;
-        // robot arm run "no6 drill above"
-        case 61:
-            move_cmd = "$61,6,drillabove,0,move$";
-            break;
-        // robot arm run "no6 drill workplace"
-        case 62:
-            move_cmd = "$62,6,drillworkplace,0,move$";
-            break;
-        // robot arm run "no6 drill safe"
-        case 63:
-            move_cmd = "$63,6,drillsafe,0,move$";
-            break;
-        // robot arm run "go home"
-        case 99:
-            move_cmd = "$99,safe,0,0,move$";
-            break;
-        // robot arm run "pcb above (get target)"
-        case 100:
-            move_cmd = "$100,pcbabove,0,0,move$";
-            break;
-        // robot arm run "pcb x position (get target)"
-        case 101:
-            move_cmd = "$101,pcbworkplace,0,x,move$";
-            break;
-        // robot arm run "pcb safe (get target)"
-        case 102:
-            move_cmd = "$102,pcbsafe,0,0,move$";
-            break;
-        // robot arm run "pcb above (place target)"
-        case 103:
-            move_cmd = "$103,pcbabove,0,0,move$";
-            break;
-        // robot arm run "pcb x position (place target)"
-        case 104:
-            move_cmd = "$104,pcbworkplace,0,x,move$";
-            break;
-        // robot arm run "pcb safe (place target)"
-        case 105:
-            move_cmd = "$105,pcbsafe,0,0,move$";
-            break;
-
-        default:
-            move_cmd = "";
-            break;
+        std::cout << ">>> Create session." << std::endl;
     }
 
-    return move_cmd;
-}
-
-std::string SessionRobotArm::getMoveFeedbackDefinition(const int move_id)
-{
-    std::string move_cmd;    
-    switch (move_id)
+    SessionRobotArm::~SessionRobotArm()
     {
-        // active robot arm program.
-        case 1: 
-            move_cmd = "$1,active,0,0,done$";
-            break;
-        // robot arm run "alignment"
-        case 2: 
-            move_cmd = "$2,align,0,0,done$";
-            break;
-        // robot arm run "no1 drill above"
-        case 11:
-            move_cmd = "$11,1,drillabove,0,done$";
-            break;
-        // robot arm run "no1 drill workplace"
-        case 12:
-            move_cmd = "$12,1,drillworkplace,0,done$";
-            break;
-        // robot arm run "no1 drill safe"
-        case 13:
-            move_cmd = "$13,1,drillsafe,0,done$";
-            break;
-        // robot arm run "no2 drill above"
-        case 21:
-            move_cmd = "$21,2,drillabove,0,done$";
-            break;
-        // robot arm run "no2 drill workplace"
-        case 22:
-            move_cmd = "$22,2,drillworkplace,0,done$";
-            break;
-        // robot arm run "no2 drill safe"
-        case 23:
-            move_cmd = "$23,2,drillsafe,0,done$";
-            break;
-        // robot arm run "no3 drill above"
-        case 31:
-            move_cmd = "$31,3,drillabove,0,done$";
-            break;
-        // robot arm run "no3 drill workplace"
-        case 32:
-            move_cmd = "$32,3,drillworkplace,0,done$";
-            break;
-        // robot arm run "no3 drill safe"
-        case 33:
-            move_cmd = "$33,3,drillsafe,0,done$";
-            break;
-        // robot arm run "no4 drill above"
-        case 41:
-            move_cmd = "$41,4,drillabove,0,done$";
-            break;
-        // robot arm run "no4 drill workplace"
-        case 42:
-            move_cmd = "$42,4,drillworkplace,0,done$";
-            break;
-        // robot arm run "no4 drill safe"
-        case 43:
-            move_cmd = "$43,4,drillsafe,0,done$";
-            break;
-        // robot arm run "no5 drill above"
-        case 51:
-            move_cmd = "$51,5,drillabove,0,done$";
-            break;
-        // robot arm run "no5 drill workplace"
-        case 52:
-            move_cmd = "$52,5,drillworkplace,0,done$";
-            break;
-        // robot arm run "no5 drill safe"
-        case 53:
-            move_cmd = "$53,5,drillsafe,0,done$";
-            break;
-        // robot arm run "no6 drill above"
-        case 61:
-            move_cmd = "$61,6,drillabove,0,done$";
-            break;
-        // robot arm run "no6 drill workplace"
-        case 62:
-            move_cmd = "$62,6,drillworkplace,0,done$";
-            break;
-        // robot arm run "no6 drill safe"
-        case 63:
-            move_cmd = "$63,6,drillsafe,0,done$";
-            break;
-        // robot arm run "go home"
-        case 99:
-            move_cmd = "$99,safe,0,0,done$";
-            break;
-        // robot arm run "pcb above (get target)"
-        case 100:
-            move_cmd = "$100,pcbabove,0,0,done$";
-            break;
-        // robot arm run "pcb x position (get target)"
-        case 101:
-            move_cmd = "$101,pcbworkplace,0,x,done$";
-            break;
-        // robot arm run "pcb safe (get target)"
-        case 102:
-            move_cmd = "$102,pcbsafe,0,0,done$";
-            break;
-        // robot arm run "pcb above (place target)"
-        case 103:
-            move_cmd = "$103,pcbabove,0,0,done$";
-            break;
-        // robot arm run "pcb x position (place target)"
-        case 104:
-            move_cmd = "$104,pcbworkplace,0,x,done$";
-            break;
-        // robot arm run "pcb safe (place target)"
-        case 105:
-            move_cmd = "$105,pcbsafe,0,0,done$";
-            break;
-
-        default:
-            move_cmd = "";
-            break;
+        std::cout << ">>> Session destroyed" << std::endl;
     }
 
-    return move_cmd;
-}
-
-void SessionRobotArm::writeMessage(const int move_id)
-{
-    // TODO: command if as arg.
-    // if the command id does not exist, throw error.
-
-    auto move_cmd = getMoveCommand(move_id)    ;
-
-    if(move_cmd == "")
+    void SessionRobotArm::start(OnReadCallback onReadCallback, OnBrokenCallback onBrokenCallback) 
     {
-        std::cout << "[Output] Error: Wrong command id.\n";
-        return;
+        onReadCallback_ = onReadCallback;
+        onBrokenCallback_ = onBrokenCallback;
+
+        //start read after connect
+        boost::asio::post(readStrand_, 
+                        std::bind(&SessionRobotArm::read, shared_from_this()));
     }
 
-    std::cout << "[Output] Send command: " << move_id << "\n";
-    boost::asio::async_write(
-        *socket_ptr_,
-        boost::asio::buffer(move_cmd + "\r\n"),
-        [&](boost::system::error_code error, std::size_t bytes_transferred)
+    void SessionRobotArm::stop(OnDisConnectedCallback callback) 
+    {
+        onDisConnectedCallback_ = callback;
+        boost::asio::post(writeStrand_,
+                        std::bind(&SessionRobotArm::issueDisConnect, shared_from_this()));
+    }
+
+    void SessionRobotArm::write(unsigned char *pStart, size_t dataSize) 
+    {
+        start_decode_data_ = 1;
+        setTimerForReadingTimeout();
+        //rule: we use mtxOutgoingQueue_ to protect outgoingQueue_
+        //      async_write and complete handler are all run in io_context thread(given strand)
         {
-        });
+            std::lock_guard<std::mutex> lock(mtxOutgoingQueue_);
+            Frame::FrameRobotArm frame(outgoingQueue_);
+            frame.writeFrameContent(pStart, dataSize);
+            boost::asio::post(writeStrand_,
+                            std::bind(&SessionRobotArm::moveFromQueueAndWrite, shared_from_this()));
+        }
+    }
 
-}
-
-void SessionRobotArm::readMessage(const int move_id)
-{     
-    int data_size = getMoveCommand(move_id).length();
-    auto self(shared_from_this());
-    bool data_available = false;
-    received_data_ = std::vector<char>(data_size);
-    bool end_this_function = false;
-    try
+    void SessionRobotArm::issueDisConnect() 
     {
-        boost::asio::async_read( 
-            *socket_ptr_, 
-            boost::asio::buffer(received_data_, data_size),
-            [&](const boost::system::error_code &error, std::size_t bytes_transferred)
+        if(connectStatus_ == ConnectionStatus::STOPPED) 
+        {
+            //do nothing
+            if (onDisConnectedCallback_) 
             {
-                if (error)
+                onDisConnectedCallback_();
+                onDisConnectedCallback_ = nullptr;
+            }
+        } 
+        else if(connectStatus_ == ConnectionStatus::STOPPING) 
+        {
+            //do nothing
+        } 
+        else 
+        {    //connected
+            boost::system::error_code error;
+            socket_.shutdown(boost::asio::socket_base::shutdown_both, error);
+            std::cout << "shutdown socket get error code: " << error.message() << std::endl;
+
+            socket_.close(error);
+            if(!error) 
+            {
+                std::cerr << "stop socket get error code: " << error.message() << std::endl;
+            } 
+            else 
+            {
+                std::cout << "stop socket successfully" << std::endl;
+            }
+            connectStatus_ = ConnectionStatus::STOPPED;
+            if(onDisConnectedCallback_) 
+            {
+                onDisConnectedCallback_();
+                onDisConnectedCallback_ = nullptr;
+            }
+        }
+    }
+
+    void SessionRobotArm::read() 
+    {
+        //std::cout << "read in thread: " << std::this_thread::get_id() << std::endl;
+        if(isAsyncReadCompleteHandlerCalled_) 
+        {
+            isAsyncReadCompleteHandlerCalled_ = 0;
+            boost::asio::async_read(socket_,
+                                    incoming_.prepare(PREPARE_READ_BUFFER_SIZE),
+                                    boost::asio::transfer_at_least(1),
+                                    boost::asio::bind_executor(readStrand_,std::bind(&SessionRobotArm::onRead, shared_from_this(), std::placeholders::_1, std::placeholders::_2)));
+        }
+    }
+
+    void SessionRobotArm::onRead(boost::system::error_code error, std::size_t bytesTransferred) 
+    {
+        //std::cout << "on_read in thread: " << std::this_thread::get_id() << std::endl;
+        isAsyncReadCompleteHandlerCalled_ = 1;
+        if(!error) 
+        {
+            std::cout << "onRead, bytes: " << std::dec << bytesTransferred << std::endl;
+            incoming_.commit(bytesTransferred);
+            Frame::FrameRobotArm frame(incoming_);
+            while(incoming_.size()) 
+            {        //we might get several frames at one time, check them all
+                if(!frame.trimToLeadingChars()) 
                 {
-                    data_available = false;
-                    std::cerr << "[Output] readCallback Error " << error << std::endl;
+                    break;
                 }
-                std::cout << "[Output] Reading finished and cancel timer.\n";
-                timer_ptr_->cancel();
-                data_available = true;
-                end_this_function = true;
-            });
-        
-        timer_ptr_->expires_from_now(boost::posix_time::seconds(MOVE_WAIT_TIME));
-        // // Use sync wait to block following actions.
-        // timer_ptr_->wait();
-        // if(!data_available)
-        // {
-        //     socket_ptr_->cancel();
-        //     std::cerr << "[Output] Read timeout." << std::endl;
-        // }
-        timer_ptr_->async_wait(  
-            [&](const boost::system::error_code &error)
+                auto frameSize = frame.parseFrameSize();
+                if(frameSize == std::numeric_limits<size_t>::max() ||   //if frameSize is not reasonable
+                    incoming_.size() < frameSize) 
+                {                      // if not enough data
+                    break;
+                }
+                //frame data are fully received, do something
+                //frame.doSomethingWithData(frameSize);
+                if (!start_decode_data_)
+                {
+                    break;
+                }
+                
+                if (onReadCallback_) 
+                {
+                    onReadCallback_(frame);
+                }
+                incoming_.consume(frameSize);
+            }
+            //trigger another read
+            read();
+        } 
+        else 
+        {
+            std::cerr << "onRead got error: " << error.message() << ", bytes transferred: " << std::dec << bytesTransferred << std::endl;
+            if (error == boost::asio::error::eof) 
+            {
+                onBrokenCallback_();
+                onBrokenCallback_ = nullptr;
+            }
+        }
+    }
+
+    void SessionRobotArm::moveFromQueueAndWrite() 
+    {
+        if (isAsyncWriteCompleteHandlerCalled_) 
+        {
+            {
+                std::lock_guard<std::mutex> lock(mtxOutgoingQueue_);
+                if (outgoingQueue_.size()) 
+                {
+                    auto copiedSize = boost::asio::buffer_copy(outgoing_.prepare(outgoingQueue_.size()), outgoingQueue_.data());
+                    outgoing_.commit(copiedSize);
+                    outgoingQueue_.consume(copiedSize);
+                }
+            }
+            if (outgoing_.size()) 
+            {
+                isAsyncWriteCompleteHandlerCalled_ = 0;
+                boost::asio::async_write(socket_,
+                                        boost::asio::buffer(outgoing_.data(), outgoing_.size()),
+                                        boost::asio::bind_executor(writeStrand_, std::bind(&SessionRobotArm::onWrite, shared_from_this(), std::placeholders::_1, std::placeholders::_2)) );
+            }
+        }
+    }
+
+    void SessionRobotArm::onWrite(boost::system::error_code error, std::size_t bytesTransferred) 
+    {
+        //std::cout << "on_write in thread: " << std::this_thread::get_id() << std::endl;
+        isAsyncWriteCompleteHandlerCalled_ = 1;
+        if (!error) 
+        {
+            std::cout << "onWrite (no error): " << error.message() << ", bytes transferred: " << std::dec << bytesTransferred << std::endl;
+            outgoing_.consume(bytesTransferred);
+            moveFromQueueAndWrite();
+        }
+        else 
+        {
+            std::cerr << "onWrite: (has error): " << error.message() << ", bytes transferred: " << std::dec << bytesTransferred << std::endl;
+            if (error == boost::asio::error::eof) 
+            {
+                if (onBrokenCallback_) 
+                {
+                    onBrokenCallback_();
+                    onBrokenCallback_ = nullptr;
+                }
+            }
+        }
+    }
+
+    void SessionRobotArm::setTimerForReadingTimeout()
+    {
+        timer_.expires_from_now(boost::posix_time::seconds(MOVE_WAIT_TIME));
+        timer_.async_wait(  
+            [&, this](const boost::system::error_code &error)
             {
                 if (!error)
                 {
-                    socket_ptr_->cancel();
+                    start_decode_data_ = 0;
                     std::cerr << "[Output] Read timeout." << std::endl;
                 }
                 else
                 {
                     std::cerr << "[Output] Timer destroyed." << std::endl;
                 }
-                end_this_function = true;
             });
-        
-        while(!end_this_function)
-        {
-            // silly blocking, needs a smart way.
-        }
     }
-    catch(const std::exception& e)
+
+    void SessionRobotArm::shutdownTimerWhenDataReceived()
     {
-        std::cerr << "[Output] Read exception. " << e.what() << '\n';
+        timer_.cancel();
     }
-
-}
-
-Session::ActionStatus SessionRobotArm::checkActionStatus(const int move_id)
-{
-    auto move_def = getMoveFeedbackDefinition(move_id);
-    /*
-        if buffer == move_def, return ActionStatus::SUCCESS
-
-        if buffer != move_def, return ActionStatus::FAILURE
-
-        if timer expire, return ActionStatus::UNKNOWN
-    */
-    for(auto i=0; i<received_data_.size(); i++)
-    {
-        if(received_data_[i] != move_def[i])
-            return Session::ActionStatus::FAILURE;
-    }
-
-    return Session::ActionStatus::SUCCESS;
-
-}
+} // namespace Session

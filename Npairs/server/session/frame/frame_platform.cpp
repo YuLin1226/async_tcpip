@@ -55,7 +55,7 @@ namespace Frame
             }
             else
             {
-                if (static_cast<unsigned char>(*d) == ('@' & 0xFF)) 
+                if (static_cast<unsigned char>(*d) == ('#' & 0xFF)) 
                 {
                     matchStatus += 1;
                     startPosition = i;

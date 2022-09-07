@@ -1,31 +1,73 @@
-#ifndef _SESSION_ROBOT_ARM_HPP_
-#define _SESSION_ROBOT_ARM_HPP_
+#if !defined(_SESSION_ROBOTARM_HPP_)
+#define _SESSION_ROBOTARM_HPP_
+
+#include <memory>
+#include <functional>
+#include <boost/asio.hpp>
+#include "frame/frame_robot_arm.hpp"
 
 
-#include "session.hpp"
-
-class SessionRobotArm : public Session
+namespace Session
 {
 
-private:
-    unsigned int MOVE_WAIT_TIME = 20;
+class SessionRobotArm : public std::enable_shared_from_this<SessionRobotArm>
+{
+    public:
+        const int MOVE_WAIT_TIME = 20;
 
-    std::string getMoveCommand(const int move_id);
+        SessionRobotArm(boost::asio::io_context& ioContext, boost::asio::ip::tcp::socket &&socket);
+        ~SessionRobotArm();
 
-    std::string getMoveFeedbackDefinition(const int move_id);
+        enum class ConnectionStatus {CONNECTED, STOPPING, STOPPED};
 
-public:
+        using OnReadCallback = std::function<void(const Frame::FrameRobotArm&)>;
+        using OnBrokenCallback = std::function<void()>;
+        using OnDisConnectedCallback = std::function<void()>;
+        
+        void start(OnReadCallback onReadCallback, OnBrokenCallback onBrokenCallback);
 
-    SessionRobotArm(std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr, std::shared_ptr<boost::asio::deadline_timer> timer_ptr);
+        void stop(OnDisConnectedCallback callback);
 
-    ~SessionRobotArm();
+        void write(unsigned char *pStart, size_t dataSize);
 
-    void writeMessage(const int move_id) override;
+        bool start_decode_data_;
+        void shutdownTimerWhenDataReceived();
 
-    void readMessage(const int move_id) override;
 
-    ActionStatus checkActionStatus(const int move_id) override;
+    private:
+        static const int PREPARE_READ_BUFFER_SIZE = 1024;
 
+        ConnectionStatus connectStatus_;
+        boost::asio::ip::tcp::socket socket_;
+        boost::asio::deadline_timer timer_;
+        boost::asio::io_context::strand writeStrand_, readStrand_;
+        boost::asio::streambuf incoming_;
+        std::mutex mtxOutgoingQueue_;
+        boost::asio::streambuf outgoing_, outgoingQueue_;
+        int isAsyncWriteCompleteHandlerCalled_, isAsyncReadCompleteHandlerCalled_;
+
+        OnReadCallback onReadCallback_;
+        OnDisConnectedCallback  onDisConnectedCallback_;
+        OnBrokenCallback onBrokenCallback_;
+
+        //should be run in io_contex thread
+        void issueDisConnect();
+
+        //should be called in io_context thread
+        void read();
+        void onRead(boost::system::error_code error, std::size_t bytesTransferred);
+
+        //should be called in io context thread
+        void moveFromQueueAndWrite();
+        void onWrite(boost::system::error_code error, std::size_t bytesTransferred);
+
+        void setTimerForReadingTimeout();
+        
+
+        
 };
 
-#endif
+
+} // namespace Session
+
+#endif // _SESSION_ROBOTARM_HPP_

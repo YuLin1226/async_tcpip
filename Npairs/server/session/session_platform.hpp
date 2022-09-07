@@ -54,7 +54,7 @@ class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
         void moveFromQueueAndWrite();
         void onWrite(boost::system::error_code error, std::size_t bytesTransferred);
 
-
+        bool start_decode_data_;
 };
 
 

@@ -11,6 +11,7 @@ namespace Session
     , connectStatus_{ConnectionStatus::CONNECTED}
     , isAsyncWriteCompleteHandlerCalled_{1}
     , isAsyncReadCompleteHandlerCalled_{1}
+    , start_decode_data_{0}
     {
         std::cout << ">>> Create session." << std::endl;
     }
@@ -123,6 +124,11 @@ namespace Session
                 }
                 //frame data are fully received, do something
                 //frame.doSomethingWithData(frameSize);
+                if (!start_decode_data_)
+                {
+                    break;
+                }
+                
                 if (onReadCallback_) 
                 {
                     onReadCallback_(frame);

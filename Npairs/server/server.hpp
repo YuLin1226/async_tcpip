@@ -18,8 +18,6 @@ private:
     boost::asio::io_context& io_context_;
     boost::asio::ip::tcp::acceptor robot_arm_acceptor_;
     boost::asio::ip::tcp::acceptor platform_acceptor_;
-    std::shared_ptr<boost::asio::ip::tcp::socket> robot_arm_socket_ptr_;
-    std::shared_ptr<boost::asio::ip::tcp::socket> platform_socket_ptr_;
 
     std::shared_ptr<Session::SessionPlatform> platform_session_;
     // std::shared_ptr<Session::SessionRobotArm> robotarm_session_;
@@ -33,7 +31,7 @@ public:
      * @brief accept client to make connection.
      */
     void accept();
-    void robot_arm_accept();
+    // void robot_arm_accept();
     void platform_accept();
 
     std::shared_ptr<Session::SessionPlatform> getPlatformSession();

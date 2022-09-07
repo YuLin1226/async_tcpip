@@ -40,10 +40,10 @@ void TCPServer::accept()
 
 void TCPServer::platform_accept()
 {
-    auto platform_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
+    platform_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
     platform_acceptor_.async_accept(
         *platform_socket_ptr_, 
-        [&](boost::system::error_code error)
+        [&, this](boost::system::error_code error)
         {
             platform_session_ = std::make_shared<Session::SessionPlatform>(io_context_, std::move(*platform_socket_ptr_));
             // platform_session_->start(

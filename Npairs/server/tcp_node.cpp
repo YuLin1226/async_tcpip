@@ -20,7 +20,7 @@ void run(TCPServer& srv)
             try
             {
                 std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
-                // srv.getPlatformSession()->write(data.data(), 4);       
+                srv.getPlatformSession()->write(data.data(), 4);       
             }
             catch(const std::exception& e)
             {

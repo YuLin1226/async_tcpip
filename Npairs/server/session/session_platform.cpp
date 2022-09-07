@@ -12,6 +12,7 @@ namespace Session
     , isAsyncWriteCompleteHandlerCalled_{1}
     , isAsyncReadCompleteHandlerCalled_{1}
     , start_decode_data_{0}
+    , timer_(ioContext)
     {
         std::cout << ">>> Create session." << std::endl;
     }
@@ -41,13 +42,16 @@ namespace Session
     void SessionPlatform::write(unsigned char *pStart, size_t dataSize) 
     {
         start_decode_data_ = 1;
+        setTimerForReadingTimeout();
         //rule: we use mtxOutgoingQueue_ to protect outgoingQueue_
         //      async_write and complete handler are all run in io_context thread(given strand)
-        std::lock_guard<std::mutex> lock(mtxOutgoingQueue_);
-        Frame::FramePlatform frame(outgoingQueue_);
-        frame.writeFrameContent(pStart, dataSize);
-        boost::asio::post(writeStrand_,
-                        std::bind(&SessionPlatform::moveFromQueueAndWrite, shared_from_this()));
+        {
+            std::lock_guard<std::mutex> lock(mtxOutgoingQueue_);
+            Frame::FramePlatform frame(outgoingQueue_);
+            frame.writeFrameContent(pStart, dataSize);
+            boost::asio::post(writeStrand_,
+                            std::bind(&SessionPlatform::moveFromQueueAndWrite, shared_from_this()));
+        }
     }
 
     void SessionPlatform::issueDisConnect() 
@@ -195,5 +199,28 @@ namespace Session
                 }
             }
         }
+    }
+
+    void SessionPlatform::setTimerForReadingTimeout()
+    {
+        timer_.expires_from_now(boost::posix_time::seconds(MOVE_WAIT_TIME));
+        timer_.async_wait(  
+            [&, this](const boost::system::error_code &error)
+            {
+                if (!error)
+                {
+                    start_decode_data_ = 0;
+                    std::cerr << "[Output] Read timeout." << std::endl;
+                }
+                else
+                {
+                    std::cerr << "[Output] Timer destroyed." << std::endl;
+                }
+            });
+    }
+
+    void SessionPlatform::shutdownTimerWhenDataReceived()
+    {
+        timer_.cancel();
     }
 } // namespace Session

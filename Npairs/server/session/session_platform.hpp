@@ -13,6 +13,8 @@ namespace Session
 class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
 {
     public:
+        const int MOVE_WAIT_TIME = 20;
+
         SessionPlatform(boost::asio::io_context& ioContext, boost::asio::ip::tcp::socket &&socket);
         ~SessionPlatform();
 
@@ -29,11 +31,15 @@ class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
         void write(unsigned char *pStart, size_t dataSize);
 
         bool start_decode_data_;
+        void shutdownTimerWhenDataReceived();
+
+
     private:
         static const int PREPARE_READ_BUFFER_SIZE = 1024;
 
         ConnectionStatus connectStatus_;
         boost::asio::ip::tcp::socket socket_;
+        boost::asio::deadline_timer timer_;
         boost::asio::io_context::strand writeStrand_, readStrand_;
         boost::asio::streambuf incoming_;
         std::mutex mtxOutgoingQueue_;
@@ -54,6 +60,9 @@ class SessionPlatform : public std::enable_shared_from_this<SessionPlatform>
         //should be called in io context thread
         void moveFromQueueAndWrite();
         void onWrite(boost::system::error_code error, std::size_t bytesTransferred);
+
+        void setTimerForReadingTimeout();
+        
 
         
 };

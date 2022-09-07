@@ -53,8 +53,7 @@ void TCPServer::platform_accept()
                     frame.print(frameSize, std::cout);
                     platform_session_->start_decode_data_ = 0;
                     //todo: check this
-                    std::array<unsigned char, 4> data{'1','2','3','4'};
-                    platform_session_->write(data.data(), 4);
+                    platform_session_->shutdownTimerWhenDataReceived();
                 },
                 []()
                 {

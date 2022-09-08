@@ -2,8 +2,8 @@
 
 TCPServer::TCPServer(boost::asio::io_context& io_context)
 : io_context_(io_context)
-// , robot_arm_acceptor_(io_context_, 
-//                       boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), ROBOTARM_PORT))
+, robotarm_acceptor_(io_context_, 
+                      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), ROBOTARM_PORT))
 , platform_acceptor_(io_context_, 
                      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), PLATFORM_PORT))
 , platform_session_(NULL)
@@ -20,23 +20,22 @@ TCPServer::~TCPServer()
 
 void TCPServer::accept()
 {
-    // robot_arm_accept();
     std::cout << ">>> Start acception." << std::endl;
+    robotarm_accept();
     platform_accept();
 }
 
-// void TCPServer::robot_arm_accept()
-// {
-//     // local ptr can be declared instead of member ptr?
-//     auto robot_arm_socket_ptr = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
-//     robot_arm_acceptor_.async_accept(
-//         *robot_arm_socket_ptr, 
-//         [&](boost::system::error_code error)
-//         {
-//             std::make_shared<SessionRobotArm>(std::move(*robot_arm_socket_ptr_), std::move(*timer_ptr));
-//             robot_arm_accept();
-//         });
-// }
+void TCPServer::robotarm_accept()
+{
+    robotarm_socket_ptr_ = std::make_shared<boost::asio::ip::tcp::socket>(io_context_);
+    robotarm_acceptor_.async_accept(
+        *robotarm_socket_ptr_, 
+        [&](boost::system::error_code error)
+        {
+            std::make_shared<Session::SessionRobotArm>(io_context_, std::move(*robotarm_socket_ptr_));
+            robotarm_accept();
+        });
+}
 
 void TCPServer::platform_accept()
 {
@@ -69,7 +68,8 @@ std::shared_ptr<Session::SessionPlatform> TCPServer::getPlatformSession()
     return platform_session_;
 }
 
-// std::shared_ptr<Session::SessionRobotArm> TCPServer::getRobotArmSession()
-// {
-//     return robotarm_session_;
-// }
+std::shared_ptr<Session::SessionRobotArm> TCPServer::getRobotArmSession()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    return robotarm_session_;
+}

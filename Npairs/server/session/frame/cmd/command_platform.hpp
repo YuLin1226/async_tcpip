@@ -1,14 +1,13 @@
 #if !defined(_COMMAND_PLATFORM_HPP_)
 #define _COMMAND_PLATFORM_HPP_
 
+#include <string>
+
 class PlatformCommand
 {
-    private:
-    
-        
 
     public:
-        unsigned char* getCommandMessage();
+        static std::string getCommandMessage();
     
 };
 

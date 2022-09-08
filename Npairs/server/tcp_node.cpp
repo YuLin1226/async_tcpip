@@ -2,6 +2,8 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include "server.hpp"
+#include "session/frame/cmd/command_platform.hpp"
+
 
 void run(TCPServer& srv)
 {
@@ -19,8 +21,10 @@ void run(TCPServer& srv)
         
             try
             {
-                std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
-                srv.getPlatformSession()->write(data.data(), 4);       
+                auto cmd = PlatformCommand::getCommandMessage();
+                // std::array<unsigned char, 4> data{0x3, 0x1, 0x4, 0x1};
+                // srv.getPlatformSession()->write(data.data(), 4);       
+                srv.getPlatformSession()->write((unsigned char*)(cmd.c_str()), cmd.size());       
             }
             catch(const std::exception& e)
             {

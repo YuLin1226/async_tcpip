@@ -88,20 +88,21 @@ namespace Frame
 
         // TODO: following the protocol of the platform to design this function.
 
-        size_t frameSize = dataSize + 6;
+        size_t frameSize = dataSize;
         boost::asio::mutable_buffer view = streambuf_.prepare(frameSize);
         auto pwrite = static_cast<unsigned char*>(view.data());
-        //write leading
-        *pwrite++ = 0x0a;
-        *pwrite++ = 0x0b;
-        *pwrite++ = 0x0c;
-        *pwrite++ = 0x0d;
+        
+        // //write leading
+        // *pwrite++ = 0x0a;
+        // *pwrite++ = 0x0b;
+        // *pwrite++ = 0x0c;
+        // *pwrite++ = 0x0d;
 
-        //write size
-        size_t sizeLowByte = frameSize & 0xFF;
-        size_t sizeHighByte = (frameSize >> 8) & 0xFF;
-        *pwrite++ = static_cast<unsigned char>(sizeLowByte);
-        *pwrite++ = static_cast<unsigned char>(sizeHighByte);
+        // //write size
+        // size_t sizeLowByte = frameSize & 0xFF;
+        // size_t sizeHighByte = (frameSize >> 8) & 0xFF;
+        // *pwrite++ = static_cast<unsigned char>(sizeLowByte);
+        // *pwrite++ = static_cast<unsigned char>(sizeHighByte);
 
         //write data
         for (size_t i=0; i<dataSize; ++i) 
